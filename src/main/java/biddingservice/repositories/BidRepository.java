@@ -2,6 +2,7 @@ package biddingservice.repositories;
 
 import biddingservice.dao.BidDao;
 import biddingservice.entities.Bid;
+import biddingservice.entities.Bidder;
 import jakarta.inject.Inject;
 import java.util.List;
 
@@ -19,7 +20,7 @@ public class BidRepository implements IRepository {
         bidDao.save(bid.getBidId(), bid.getBidderId(), bid.getBidValue(), bid.getLotId());
     }
 
-    public Bid getMaxBidForLotId(String lotId) {
+    public Bidder getMaxBidForLotId(String lotId) {
         return bidDao.getMaxBidForLotId(lotId);
     }
 
@@ -27,8 +28,8 @@ public class BidRepository implements IRepository {
         return bidDao.fetchBidByLotId(lotId);
     }
 
-    public Bid findBid(String bidderId) {
-        return bidDao.fetchBidByBidderId(bidderId);
+    public Bid findBid(String bidderId, String lotId) {
+        return bidDao.fetchBidByBidderId(bidderId, lotId);
     }
 
 }

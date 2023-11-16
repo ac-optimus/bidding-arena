@@ -2,6 +2,7 @@ package biddingservice.services;
 
 import biddingservice.Constants;
 import biddingservice.entities.Bid;
+import biddingservice.entities.Bidder;
 import biddingservice.entities.Lot;
 import biddingservice.enums.FilterCategory;
 import biddingservice.exceptions.IllegalBidArgumentException;
@@ -68,7 +69,7 @@ public class BiddingService {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-            }, 2 , TimeUnit.SECONDS);
+            }, delayTime , TimeUnit.SECONDS);
             return lot;
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -77,28 +78,37 @@ public class BiddingService {
     }
 
     private void closeLot(String lotId) throws IOException {
-        Bid maxBidder =  bidRepository.getMaxBidForLotId(lotId);
+        Bidder maxBidder =  bidRepository.getMaxBidForLotId(lotId);
         String receiver = "receiver";
-        senderFactory.getSender(Constants.Gateway.SMS).send(receiver);
-        System.out.println("end time reached for lotId: "+lotId);
+        if (maxBidder !=null) {
+            log.info(String.format("closing lot with lotId: %s. %s has won the lot.", lotId, maxBidder.getId()));
+            senderFactory.getSender(Constants.Gateway.SMS).send(receiver);
+            System.out.println("closing lot");
+            log.info("closing lot lotId: "+lotId);
+        } else {
+//            senderFactory.getSender(Constants.Gateway.SMS).send(receiver);
+            log.info("closing lot lotId: "+lotId);
+        }
     }
 
     public Bid placeBid(String bidderId, Double bidValue, String lotId) throws InvalidUpdateException,
             IllegalBidArgumentException, InvalidLotIdArgumentException, JsonProcessingException {
         validateBid(lotId, bidValue);
-        Bid bid = bidRepository.findBid(bidderId);
+        Bid bid = bidRepository.findBid(bidderId, lotId);
         if (bid != null) {
             bid.updateBidValue(bidValue);
         } else {
             Bid newBid = Bid.builder()
                     .bidId(generateId())
+                    .bidderId(bidderId)
                     .bidValue(bidValue)
                     .lotId(lotId)
                     .build();
-            System.out.println(objectMapper.writeValueAsString(newBid));
+            log.info(objectMapper.writeValueAsString(newBid));
             bidRepository.save(newBid);
             return newBid;
         }
+        bidRepository.save(bid);
         return bid;
     }
 
@@ -121,7 +131,7 @@ public class BiddingService {
     }
 
     private void validateBid(String lotId, Double bidValue) throws IllegalBidArgumentException,
-            InvalidLotIdArgumentException, JsonProcessingException {
+            InvalidLotIdArgumentException {
         long bidTime = System.currentTimeMillis();
         Lot lot = lotRepository.fetchLot(lotId);
         if (lot==null)

@@ -2,6 +2,7 @@ package biddingservice.repositories;
 
 import biddingservice.dao.BidDao;
 import biddingservice.entities.Bid;
+import biddingservice.entities.Bidder;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,9 +33,10 @@ class BidRepositoryTest {
 
     @Test
     void testGetMaxBidForLotId() {
-        when(bidDao.getMaxBidForLotId(anyString())).thenReturn(new Bid("bidId", "bidderId", Double.valueOf(0), "lotId"));
-        Bid result = bidRepository.getMaxBidForLotId("lotId");
-        Assertions.assertEquals("bidId", result.getBidId());
+        when(bidDao.getMaxBidForLotId(anyString())).thenReturn(new Bidder("bidderId", "name", "email",
+                "number", "address"));
+        Bidder result = bidRepository.getMaxBidForLotId("lotId");
+        Assertions.assertEquals("bidderId", result.getId());
     }
 
     @Test
@@ -46,8 +48,8 @@ class BidRepositoryTest {
 
     @Test
     void testFindBid() {
-        when(bidDao.fetchBidByBidderId(anyString())).thenReturn(new Bid("bidId", "bidderId", Double.valueOf(0), "lotId"));
-        Bid result = bidRepository.findBid("bidderId");
+        when(bidDao.fetchBidByBidderId(anyString(), anyString())).thenReturn(new Bid("bidId", "bidderId", Double.valueOf(0), "lotId"));
+        Bid result = bidRepository.findBid("bidderId", "lotId");
         Assertions.assertEquals("bidId", result.getBidId());
     }
 

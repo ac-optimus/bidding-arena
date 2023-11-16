@@ -1,6 +1,7 @@
 package biddingservice.services;
 
 import biddingservice.entities.Bid;
+import biddingservice.entities.Bidder;
 import biddingservice.entities.Lot;
 import biddingservice.entities.Product;
 import biddingservice.enums.FilterCategory;
@@ -24,14 +25,12 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.slf4j.Logger;
-
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
-
 import static org.mockito.Mockito.*;
+
 
 class BiddingServiceTest {
     @Mock
@@ -56,7 +55,8 @@ class BiddingServiceTest {
 
     @Test
     void testCreateLot() throws LotCreateException {
-        when(bidRepository.getMaxBidForLotId(anyString())).thenReturn(new Bid("bidId", "bidderId", Double.valueOf(0), "lotId"));
+        when(bidRepository.getMaxBidForLotId(anyString())).thenReturn(new Bidder("id", "name", "email",
+                "number", "address"));
         when(senderFactory.getSender(anyString())).thenReturn(new SmsSender(null));
         Lot result = biddingService.createLot(new Product("productId", "name", ProductCategory.FURNITURE, "meta"), "vendorId", Double.valueOf(10), 100L, 110L);
         Assertions.assertEquals(result.getEndTime(), 110L);
@@ -66,7 +66,7 @@ class BiddingServiceTest {
 
     @Test
     void testPlaceBid() throws JsonProcessingException, InvalidLotIdArgumentException, IllegalBidArgumentException, InvalidUpdateException {
-        when(bidRepository.findBid(anyString())).thenReturn(new Bid("bidId", "bidderId", Double.valueOf(10), "lotId"));
+        when(bidRepository.findBid(anyString(), anyString())).thenReturn(new Bid("bidId", "bidderId", Double.valueOf(10), "lotId"));
         when(lotRepository.fetchLot("lotId")).thenReturn(Lot.builder()
                 .endTime(System.currentTimeMillis()+1000)
                 .openingPrice(Double.valueOf(100))
@@ -90,7 +90,7 @@ class BiddingServiceTest {
     @Test
     void testPlaceBidIllegalBidArgumentExceptionExpiredLot() throws JsonProcessingException, InvalidLotIdArgumentException, IllegalBidArgumentException, InvalidUpdateException {
         when(lotRepository.fetchLot(anyString())).thenReturn(new Lot("lotId", "productId", "vendorId", Double.valueOf(10), 100L, 110L));
-        when(bidRepository.findBid(anyString())).thenReturn(new Bid("bidId", "bidderId", Double.valueOf(10), "lotId"));
+        when(bidRepository.findBid(anyString(), anyString())).thenReturn(new Bid("bidId", "bidderId", Double.valueOf(10), "lotId"));
         assertThrows(IllegalBidArgumentException.class, () -> {
             biddingService.placeBid("bidderId", Double.valueOf(1000), "lotId");
         });
@@ -98,7 +98,7 @@ class BiddingServiceTest {
 
     @Test
     void testPlaceBidIllegalBidArgumentExceptionLowerBidValue() throws JsonProcessingException, InvalidLotIdArgumentException, IllegalBidArgumentException, InvalidUpdateException {
-        when(bidRepository.findBid(anyString())).thenReturn(new Bid("bidId", "bidderId", Double.valueOf(10), "lotId"));
+        when(bidRepository.findBid(anyString(), anyString())).thenReturn(new Bid("bidId", "bidderId", Double.valueOf(10), "lotId"));
         when(lotRepository.fetchLot("lotId")).thenReturn(Lot.builder()
                 .endTime(System.currentTimeMillis()+1000)
                 .openingPrice(Double.valueOf(100000))
@@ -110,7 +110,7 @@ class BiddingServiceTest {
 
     @Test
     void testPlaceBidIllegalBidArgumentExceptionInvalidLotId() throws JsonProcessingException, InvalidLotIdArgumentException, IllegalBidArgumentException, InvalidUpdateException {
-        when(bidRepository.findBid(anyString())).thenReturn(new Bid("bidId", "bidderId", Double.valueOf(10), "lotId"));
+        when(bidRepository.findBid(anyString(), anyString())).thenReturn(new Bid("bidId", "bidderId", Double.valueOf(10), "lotId"));
         assertThrows(InvalidLotIdArgumentException.class, () -> {
             biddingService.placeBid("bidderId", Double.valueOf(1000), "lotId");
         });

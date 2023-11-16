@@ -30,7 +30,7 @@ public class BiddingArena {
     public CreateLotResponseBody createLot(CreateLotRequest request) throws LotCreateException {
 
         long startTime = System.currentTimeMillis();
-        long endTime = startTime + (long) Integer.parseInt(request.getEndTimeInHours()) * 60 * 1000;
+        long endTime = startTime + (long) Integer.parseInt(request.getEndTimeInHours()) * 60 * 60 * 1000;
         Lot lot =  biddingService.createLot(request.getProduct(), request.getVendorId(),
                 request.getOpeningPrice(),startTime,  endTime);
         return new CreateLotResponseBody(lot);
